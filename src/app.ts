@@ -7,11 +7,12 @@ import {
     MessageComponentTypes,
     ButtonStyleTypes
 } from 'discord-interactions'
-import { VerifyDiscordRequest, DiscordRequest } from './utils'
+import { VerifyDiscordRequest } from './utils'
+import InteractionService from './services/InteractionService'
+
 const app = express()
 const PORT = process.env.PORT || 3000
 
-console.log('PK: ', process.env.PUBLIC_KEY)
 app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }))
 
 app.post('/interactions', async (req, res) => {
@@ -20,46 +21,18 @@ app.post('/interactions', async (req, res) => {
     const { type, id, data } = req.body
 
     if (type === InteractionType.PING) {
-        return res.send({ type: InteractionResponseType.PONG })
+        return res.status(200).send({ type: InteractionResponseType.PONG })
     }
 
     if (type === InteractionType.APPLICATION_COMMAND) {
         const { name } = data
-
-        if (name === 'test') {
-            return res.send({
-                type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                data: {
-                    content: 'Føh fahn detta er fett da!?'
-                }
-            })
-        }
+        const result = await InteractionService.Instance.handleInteraction(name)
+        return res.send(result)
     }
 })
 
-const createCommand = async () => {
-    const appId = process.env.APP_ID
-    const globalEndpoint = `applications/${appId}/commands`
-
-    const commandBody = {
-        name: 'test',
-        description: 'Command for testing',
-        type: 1
-    }
-
-    try {
-        const res = await DiscordRequest(globalEndpoint, {
-            method: 'POST',
-            body: commandBody
-        })
-        console.log(await res.json())
-    } catch (error) {
-        console.error('Error installing commands: ', error)
-    }
-}
 
 app.listen(PORT, () => {
     console.log('Listening on ports: ', PORT)
-
-    createCommand()
+    InteractionService.Instance.createCommands()
 })
