@@ -16,8 +16,6 @@ const PORT = process.env.PORT || 3000
 app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }))
 
 app.post('/interactions', async (req, res) => {
-    console.log('INTERACTION REQUESTED')
-
     const { type, id, data } = req.body
 
     if (type === InteractionType.PING) {
@@ -31,6 +29,10 @@ app.post('/interactions', async (req, res) => {
     }
 })
 
+app.post('users/:name/statistics', async (req, res) => {
+    console.log('Statistics received')
+    return res.status(201)
+})
 
 app.listen(PORT, () => {
     console.log('Listening on ports: ', PORT)

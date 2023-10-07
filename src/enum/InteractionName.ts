@@ -1,3 +1,3 @@
 export enum InteractionName {
-    TEST = 'test'
+    STATS = 'stats'
 }

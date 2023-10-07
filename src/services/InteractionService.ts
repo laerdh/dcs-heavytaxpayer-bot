@@ -1,7 +1,8 @@
 import { InteractionResponseType } from "discord-interactions"
 import { InteractionResponse } from "../model/InteractionResponse"
-import { InteractionName } from "../model/InteractionName"
+import { InteractionName } from "../enum/InteractionName"
 import { DiscordRequest } from "../utils"
+import UserStatisticsService from "./UserStatisticsService"
 
 class InteractionService {
     private static _instance: InteractionService
@@ -14,11 +15,13 @@ class InteractionService {
 
     public async handleInteraction(interactionName: string): Promise<InteractionResponse> {
         switch (interactionName) {
-            case InteractionName.TEST:
+            case InteractionName.STATS:
+                const resultText = await UserStatisticsService.Instance.getUserStatistics()
+
                 return {
                     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     data: {
-                        content: 'Føh fahn detta er fett a?!'
+                        content: resultText
                     }
                 }
             default:
@@ -36,8 +39,8 @@ class InteractionService {
         const globalEndpoint = `applications/${appId}/commands`
     
         const commandBody = {
-            name: InteractionName.TEST,
-            description: 'Command for testing',
+            name: InteractionName.STATS,
+            description: 'Hent spillerstatistikk fra DCS',
             type: 1
         }
     
