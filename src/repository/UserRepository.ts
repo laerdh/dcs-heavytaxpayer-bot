@@ -25,8 +25,6 @@ class UserRepository {
                 .sort({ totalTax: -1 })
                 .toArray()
             
-            console.log('RESULT: ', JSON.stringify(result))
-
             return result.map(entry => {
                 return {
                     username: entry.username,

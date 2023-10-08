@@ -1,4 +1,5 @@
 import { FlightDataInput } from "../model/FlightDataInput"
+import { User } from "../model/User"
 import { UserStatistics } from "../model/UserStatistics"
 import UserRepository from "../repository/UserRepository"
 
@@ -23,31 +24,13 @@ class UserStatisticsService {
             }]
         })
 
-        const result = await UserRepository.Instance.getUserStatistics()
+        const users = await UserRepository.Instance.getUserStatistics()
 
-        if (!result) {
-            return 'No game data found.'
+        if (!users) {
+            return 'No flight data found.'
         }
 
-        const title = `Top ${result.length} tax wasters\n\n`
-        
-        const content = result?.flatMap((user, index) => {
-            const userStatistics = user.statistics
-            const flightStatistics = userStatistics.flightData.at(userStatistics.flightData.length - 1)
-
-            const totalKills = userStatistics?.totalKills ?? 0
-            const totalDeaths = userStatistics?.totalDeaths ?? 0
-            const totalTax = userStatistics?.totalTax ?? 0
-
-            const kills = flightStatistics?.kills ?? 0
-            const deaths = flightStatistics?.deaths ?? 0
-            const maxAirspeed = flightStatistics?.maxAirspeed ?? 0
-            const maxGforce = flightStatistics?.maxGforce ?? 0
-
-            return `***${index+1}. ${user.username}***Kills: ${kills} (Total: ${totalKills})\nDeaths: ${deaths} (Total: ${totalDeaths})\nMax airspeed: ${maxAirspeed} IAS\nMax G: ${maxGforce}\nTotal tax: $${totalTax}`
-        }).join("\n\n")
-
-        return title + content
+        return this.generateStatisticsTextContent(users)
     }
 
     public async updateUserStatistics(flightData: FlightDataInput) {
@@ -70,6 +53,28 @@ class UserStatisticsService {
         return result
     }
 
+    private generateStatisticsTextContent(users: User[]): string {
+        const title = `Top ${users.length} tax wasters\n\n`
+
+        const content = users?.flatMap((user, index) => {
+            const userStatistics = user.statistics
+            const flightStatistics = userStatistics.flightData.at(userStatistics.flightData.length - 1)
+
+            const totalKills = userStatistics?.totalKills ?? 0
+            const totalDeaths = userStatistics?.totalDeaths ?? 0
+            const totalTax = userStatistics?.totalTax ?? 0
+
+            const kills = flightStatistics?.kills ?? 0
+            const deaths = flightStatistics?.deaths ?? 0
+            const maxAirspeed = flightStatistics?.maxAirspeed ?? 0
+            const maxGforce = flightStatistics?.maxGforce ?? 0
+
+            return `***${index+1}. ${user.username}***Kills: ${kills} (Total: ${totalKills})\nDeaths: ${deaths} (Total: ${totalDeaths})\nMax airspeed: ${maxAirspeed} IAS\nMax G: ${maxGforce}\nTotal tax: $${totalTax}`
+        }).join("\n\n")
+
+        return title + content
+    }
+
     private calculateMaintenanceCosts(flightData: FlightDataInput): number {
         const maxAirspeed = Math.max(...flightData.airspeeds)
         const maxGs = Math.max(...flightData.gforces)
@@ -78,6 +83,7 @@ class UserStatisticsService {
         let totalCosts = 0
 
         if (deaths > 0) {
+            // TODO: Get aircraft costs etc.
             const price = 40000000
             totalCosts = price * deaths
         }
