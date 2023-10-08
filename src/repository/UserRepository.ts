@@ -18,8 +18,15 @@ class UserRepository {
     public async getUserStatistics(): Promise<User[]> {
         try {
             await this._mongoClient.connect()
-            const result = await this._mongoClient.db(this._databaseName).collection('users').find({}).toArray()
+
+            const result = await this._mongoClient.db(this._databaseName)
+                .collection('users')
+                .find({})
+                .sort({ totalTax: -1 })
+                .toArray()
             
+            console.log('RESULT: ', JSON.stringify(result))
+
             return result.map(entry => {
                 return {
                     username: entry.username,
@@ -34,25 +41,35 @@ class UserRepository {
         }
     }
 
-    public async updateUserStatistics(userStatistics: UserStatistics) {
+    public async updateUserStatistics(username: string, statistics: UserStatistics) {
         try {
             await this._mongoClient.connect()
 
-            const result = await this._mongoClient.db(this._databaseName).collection('users').updateOne(
-                { username: userStatistics.username },
-                {
-                    $push: {
-                        statistics: {
-                            date: userStatistics.date,
-                            kills: userStatistics.kills,
-                            crashes: userStatistics.crashes,
-                            maxAirspeed: userStatistics.maxAirspeed,
-                            maxGforce: userStatistics.maxGforce,
-                            maintenanceCosts: userStatistics.maintenanceCosts,
+            const flightData = statistics.flightData.at(0)
+
+            const result = await this._mongoClient.db(this._databaseName)
+                .collection('users')
+                .updateOne(
+                    { username: username },
+                    {
+                        $inc: {
+                            "statistics.totalTax": flightData?.maintenanceCosts,
+                            "statistics.totalKills": flightData?.kills,
+                            "statistics.totalDeaths": flightData?.deaths,
+                        },
+                        $push: {
+                            "statistics.flightData": {
+                                date: flightData?.date,
+                                kills: flightData?.kills,
+                                deaths: flightData?.deaths,
+                                maxAirspeed: flightData?.maxAirspeed,
+                                maxGforce: flightData?.maxGforce,
+                                maintenanceCosts: flightData?.maintenanceCosts,
+                            }
                         }
-                    }
-                },
-                { upsert: true })
+                    },
+                    { upsert: true }
+                )
 
             return result
         } catch (error) {

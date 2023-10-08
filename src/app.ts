@@ -7,7 +7,7 @@ import {
     MessageComponentTypes,
     ButtonStyleTypes
 } from 'discord-interactions'
-import { VerifyDiscordRequest } from './utils'
+import { VerifyDiscordRequest } from './Utils'
 import InteractionService from './services/InteractionService'
 
 const app = express()

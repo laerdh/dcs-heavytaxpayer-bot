@@ -1,9 +1,8 @@
+import { FlightData } from "./FlightData"
+
 export interface UserStatistics {
-    date: Date
-    username: string
-    kills: number
-    crashes: number
-    maxAirspeed: number
-    maxGforce: number
-    maintenanceCosts: number
+    flightData: [FlightData]
+    totalKills?: number
+    totalDeaths?: number
+    totalTax?: number
 }

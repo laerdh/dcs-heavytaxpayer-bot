@@ -1,7 +1,7 @@
-export interface UserStatisticsInput {
+export interface FlightDataInput {
     username: string
     kills: number
-    crashes: number
+    deaths: number
     airspeeds: Array<number>
     gforces: Array<number>
 }

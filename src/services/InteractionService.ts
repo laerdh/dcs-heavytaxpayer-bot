@@ -1,7 +1,7 @@
 import { InteractionResponseType } from "discord-interactions"
 import { InteractionResponse } from "../model/InteractionResponse"
 import { InteractionName } from "../enum/InteractionName"
-import { DiscordRequest } from "../utils"
+import { DiscordRequest } from "../Utils"
 import UserStatisticsService from "./UserStatisticsService"
 
 class InteractionService {

@@ -1,5 +1,5 @@
+import { FlightDataInput } from "../model/FlightDataInput"
 import { UserStatistics } from "../model/UserStatistics"
-import { UserStatisticsInput } from "../model/UserStatisticsInput"
 import UserRepository from "../repository/UserRepository"
 
 class UserStatisticsService {
@@ -11,49 +11,79 @@ class UserStatisticsService {
         return this._instance || (this._instance = new this())
     }
 
-    public async getUserStatistics(): Promise<string> {        
+    public async getUserStatistics(): Promise<string> {    
+        const res = await UserRepository.Instance.updateUserStatistics('RotorMcSkakk', {
+            flightData: [{
+                date: new Date(),
+                kills: 0,
+                deaths: 32,
+                maxAirspeed: 2000,
+                maxGforce: 18,
+                maintenanceCosts: 99999
+            }]
+        })
+
         const result = await UserRepository.Instance.getUserStatistics()
-        const resultText = result?.flatMap(user => {
-            const result = user.statistics.at(user.statistics.length - 1)
-            return `${user.username} - Antall kræsj: ${result?.crashes}, høyeste hastighet: ${result?.maxAirspeed} IAS, maks G: ${result?.maxGforce}. Skattebetalerne må punge ut $${result?.maintenanceCosts} i vedlikeholdskostnader på grunn av deg, ditt jævla fittetryne :(`
+
+        if (!result) {
+            return 'No game data found.'
+        }
+
+        const title = `Top ${result.length} tax wasters\n\n`
+        
+        const content = result?.flatMap((user, index) => {
+            const userStatistics = user.statistics
+            const flightStatistics = userStatistics.flightData.at(userStatistics.flightData.length - 1)
+
+            const totalKills = userStatistics?.totalKills ?? 0
+            const totalDeaths = userStatistics?.totalDeaths ?? 0
+            const totalTax = userStatistics?.totalTax ?? 0
+
+            const kills = flightStatistics?.kills ?? 0
+            const deaths = flightStatistics?.deaths ?? 0
+            const maxAirspeed = flightStatistics?.maxAirspeed ?? 0
+            const maxGforce = flightStatistics?.maxGforce ?? 0
+
+            return `***${index+1}. ${user.username}***Kills: ${kills} (Total: ${totalKills})\nDeaths: ${deaths} (Total: ${totalDeaths})\nMax airspeed: ${maxAirspeed} IAS\nMax G: ${maxGforce}\nTotal tax: $${totalTax}`
         }).join("\n\n")
 
-        return resultText
+        return title + content
     }
 
-    public async updateUserStatistics(userStatistics: UserStatisticsInput) {
-        const maxAirspeed = Math.max(...userStatistics.airspeeds)
-        const maxGs = Math.max(...userStatistics.gforces)
-        const maintenanceCosts = this.calculateMaintenanceCosts(userStatistics)
+    public async updateUserStatistics(flightData: FlightDataInput) {
+        const maxAirspeed = Math.max(...flightData.airspeeds)
+        const maxGs = Math.max(...flightData.gforces)
+        const maintenanceCosts = this.calculateMaintenanceCosts(flightData)
 
         const update = {
-            date: new Date(),
-            username: userStatistics.username,
-            kills: userStatistics.kills,
-            crashes: userStatistics.crashes,
-            maxAirspeed: maxAirspeed,
-            maxGforce: maxGs,
-            maintenanceCosts: maintenanceCosts
+            flightData: [{
+                date: new Date(),
+                kills: flightData.kills,
+                deaths: flightData.deaths,
+                maxAirspeed: maxAirspeed,
+                maxGforce: maxGs,
+                maintenanceCosts: maintenanceCosts
+            }]
         } as UserStatistics
 
-        const result = await UserRepository.Instance.updateUserStatistics(update)
+        const result = await UserRepository.Instance.updateUserStatistics(flightData.username, update)
         return result
     }
 
-    private calculateMaintenanceCosts(userStatistics: UserStatisticsInput): number {
-        const maxAirspeed = Math.max(...userStatistics.airspeeds)
-        const maxGs = Math.max(...userStatistics.gforces)
-        const crashes = userStatistics.crashes
+    private calculateMaintenanceCosts(flightData: FlightDataInput): number {
+        const maxAirspeed = Math.max(...flightData.airspeeds)
+        const maxGs = Math.max(...flightData.gforces)
+        const deaths = flightData.deaths
 
         let totalCosts = 0
 
-        if (crashes > 0) {
+        if (deaths > 0) {
             const price = 40000000
-            totalCosts = price * crashes
+            totalCosts = price * deaths
         }
         
         if (maxGs > 9) {
-            const numberOfMaxGs = userStatistics.gforces.filter(gForce => gForce > 9).length
+            const numberOfMaxGs = flightData.gforces.filter(gForce => gForce > 9).length
             totalCosts += numberOfMaxGs * 1000000
         }
 

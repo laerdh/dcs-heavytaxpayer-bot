@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "nodemon ./src/app.ts"
+    "start": "nodemon ./src/App.ts"
   },
   "dependencies": {
     "@discordjs/core": "^1.0.1",
