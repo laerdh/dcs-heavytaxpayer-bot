@@ -4,11 +4,15 @@ import { UserStatistics } from "../model/UserStatistics"
 
 class UserRepository {
     private static _instance: UserRepository
+
     private readonly _mongoClient: MongoClient
+    private readonly _dbUser = encodeURIComponent(`${process.env.MONGODB_USER}`)
+    private readonly _dbPassword = encodeURIComponent(`${process.env.MONGODB_PASSWORD}`)
     private readonly _databaseName = "heavytaxpayer"
 
     private constructor() {
-        this._mongoClient = new MongoClient(process.env.MONGODB || '')
+        const connectionString = `mongodb://${this._dbUser}:${this._dbPassword}@${process.env.MONGODB_SERVER}`
+        this._mongoClient = new MongoClient(connectionString)
     }
 
     public static get Instance() {
